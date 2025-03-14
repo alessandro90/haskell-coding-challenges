@@ -150,4 +150,5 @@ test-suite code-challenges-test
     build-depends:
         base ^>=4.17.2.1,
         code-challenges,
-        HUnit ^>=1.6.2.0
+        tasty ^>=1.5.3,
+        tasty-hunit ^>=0.10.2

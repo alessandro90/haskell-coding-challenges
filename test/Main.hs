@@ -1,9 +1,10 @@
 module Main (main) where
 
+-- The tests can be run like so:
+-- cabal test --test-options "-p Should-be-2"
+
 import CcwTest (ccwTests)
-import Test.HUnit
+import Test.Tasty
 
 main :: IO ()
-main = do
-  _ <- runTestTT ccwTests
-  pure ()
+main = defaultMain ccwTests
