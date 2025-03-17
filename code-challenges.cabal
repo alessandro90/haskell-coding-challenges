@@ -83,10 +83,10 @@ library
     import:           warnings, global-extensions
 
     -- Modules exported by the library.
-    exposed-modules:  Ccw
+    exposed-modules:  Ccw, Misc
 
     -- Modules included in this library but not exported.
-    -- other-modules:
+    -- other-modules: 
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -132,7 +132,7 @@ test-suite code-challenges-test
     default-language: Haskell2010
 
     -- Modules included in this executable, other than Main.
-    other-modules: CcwTest
+    other-modules: CcwTest, MiscTest
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
