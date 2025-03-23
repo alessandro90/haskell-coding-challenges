@@ -1,4 +1,4 @@
-module MiscTest where
+module MiscTest (startsWithTests) where
 
 import Misc (startsWith, startsWithItem)
 import Test.Tasty

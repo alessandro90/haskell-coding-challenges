@@ -1,5 +1,7 @@
 module Main where
 
-main :: IO ()
-main = do
-  putStrLn "Hello, Haskell!"
+import Ccw (runCcw)
+import System.Exit (ExitCode)
+
+main :: IO ExitCode
+main = runCcw

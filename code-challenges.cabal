@@ -151,4 +151,6 @@ test-suite code-challenges-test
         base ^>=4.17.2.1,
         code-challenges,
         tasty ^>=1.5.3,
-        tasty-hunit ^>=0.10.2
+        tasty-hunit ^>=0.10.2,
+        text,
+        bytestring
