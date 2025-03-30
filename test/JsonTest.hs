@@ -6,23 +6,24 @@ import Json
 import Test.Tasty
 import Test.Tasty.HUnit
 import Text.Megaparsec
+import Prelude hiding (null)
 
 parseNull :: TestTree
 parseNull =
   testGroup
     "json-parse-null"
     [ testCase "json-parse-null-no-space" $ do
-        let n = runParser null_ "null" "null"
+        let n = runParser null "null" "null"
         case n of
           Right _ -> pure ()
           Left e -> assertFailure $ errorBundlePretty e,
       testCase "json-parse-null-with-space" $ do
-        let n = runParser null_ "null" "     null"
+        let n = runParser null "null" "     null"
         case n of
           Right _ -> pure ()
           Left e -> assertFailure $ errorBundlePretty e,
       testCase "json-parse-null-empty" $ do
-        let n = runParser null_ "null" ""
+        let n = runParser null "null" ""
         case n of
           Right _ -> assertFailure "Empty string should cause failure"
           Left _ -> pure ()
@@ -121,7 +122,15 @@ parseText =
     ]
 
 parseArray :: TestTree
-parseArray = undefined
+parseArray =
+  testGroup
+    "json-parse-array"
+    [ testCase "json-parse-array-empty" $ do
+        let a = runParser array "array" "[]"
+        case a of
+          Left e -> assertFailure $ errorBundlePretty e
+          Right a' -> assertEqual "should be empty" [] a'
+    ]
 
 jsonTests :: TestTree
 jsonTests =

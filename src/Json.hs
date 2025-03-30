@@ -11,31 +11,31 @@ import Data.Void (Void)
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
+import Prelude hiding (null)
 
 type Parser = Parsec Void Text
 
-data JsonValue
+data Value
   = JBool Bool
   | JNumber Double
   | JText Text
-  | JArray JsonArray
-  | JObject JsonObject
+  | JArray [Value]
+  | JObject Object
   | JNull
+  deriving (Show, Eq)
 
-type JsonArray = [JsonValue]
+type Object = M.Map String Value
 
-type JsonObject = M.Map String JsonValue
-
-null_ :: Parser ()
-null_ = space >> void (string "null")
+null :: Parser ()
+null = space >> void (string "null")
 
 number :: Parser Double
-number =
-  space
-    >> L.signed
-      space
-      ( try L.float <|> fromIntegral @Int <$> L.decimal
-      )
+number = space >> L.signed space unsigned
+  where
+    unsigned = try L.float <|> fromIntegral @Int <$> L.decimal
+
+delimited :: Char -> Char -> Parser a -> Parser a
+delimited l r = between (wschar l) (wschar r)
 
 boolean :: Parser Bool
 boolean = space >> (True <$ string "true") <|> (False <$ string "false")
@@ -43,23 +43,17 @@ boolean = space >> (True <$ string "true") <|> (False <$ string "false")
 text :: Parser Text
 text = space >> char '"' *> (T.pack <$> manyTill L.charLiteral (char '"'))
 
-array :: Parser JsonArray
-array = space >> between (wschar '[') (wschar ']') (commaSep value)
+array :: Parser [Value]
+array = space >> delimited '[' ']' (commaSep value)
 
-object :: Parser JsonObject
-object = do
-  _ <- space
-  kv <- between (wschar '{') (wschar '}') (commaSep keyValue)
-  pure $ foldr (\(k, v) m -> M.insert k v m) M.empty kv
+object :: Parser Object
+object = M.fromList <$> (space >> delimited '{' '}' (commaSep keyValue))
 
-parseJson :: Text -> Either String JsonObject
-parseJson = first errorBundlePretty . runParser (object <* eof) "json"
+parseJson :: Text -> Either String Object
+parseJson = first errorBundlePretty . runParser (object <* space <* eof) "json"
 
 wschar :: Char -> Parser Char
 wschar c = space >> char c
-
-surrounded :: Parser Char -> Parser a -> Parser a
-surrounded by p = by *> p <* by
 
 commaSep :: Parser a -> Parser [a]
 commaSep p = p `sepBy` wschar ','
@@ -67,16 +61,16 @@ commaSep p = p `sepBy` wschar ','
 key :: Parser String
 key = T.unpack <$> (space >> text)
 
-value :: Parser JsonValue
+value :: Parser Value
 value =
   (JBool <$> boolean)
-    <|> (JNull <$ null_)
+    <|> (JNull <$ null)
     <|> (JNumber <$> number)
     <|> (JText <$> text)
     <|> (JArray <$> array)
     <|> (JObject <$> object)
 
-keyValue :: Parser (String, JsonValue)
+keyValue :: Parser (String, Value)
 keyValue = do
   k <- key
   _ <- wschar ':'
