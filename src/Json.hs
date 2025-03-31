@@ -44,10 +44,10 @@ text :: Parser Text
 text = space >> char '"' *> (T.pack <$> manyTill L.charLiteral (char '"'))
 
 array :: Parser [Value]
-array = space >> delimited '[' ']' (commaSep value)
+array = space >> delimited '[' ']' (commaSep $ value <* space)
 
 object :: Parser Object
-object = M.fromList <$> (space >> delimited '{' '}' (commaSep keyValue))
+object = M.fromList <$> (space >> delimited '{' '}' (commaSep $ keyValue <* space))
 
 parseJson :: Text -> Either String Object
 parseJson = first errorBundlePretty . runParser (object <* space <* eof) "json"
@@ -63,11 +63,11 @@ key = T.unpack <$> (space >> text)
 
 value :: Parser Value
 value =
-  (JBool <$> boolean)
-    <|> (JNull <$ null)
-    <|> (JNumber <$> number)
-    <|> (JText <$> text)
-    <|> (JArray <$> array)
+  (JBool <$> try boolean)
+    <|> (JNull <$ try null)
+    <|> (JNumber <$> try number)
+    <|> (JText <$> try text)
+    <|> (JArray <$> try array)
     <|> (JObject <$> object)
 
 keyValue :: Parser (String, Value)

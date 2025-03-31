@@ -54,7 +54,17 @@ parseBoolean =
         let n = runParser boolean "boolean" "   \n   false"
         case n of
           Right b -> assertEqual "Should be False" False b
-          Left e -> assertFailure $ errorBundlePretty e
+          Left e -> assertFailure $ errorBundlePretty e,
+      testCase "json-parse-boolean-invalid-uppercase" $ do
+        let n = runParser boolean "boolean" "False"
+        case n of
+          Right b -> assertFailure $ "Should fail" <> show b
+          Left _ -> pure (),
+      testCase "json-parse-boolean-invalid-typo" $ do
+        let n = runParser boolean "boolean" "Failse"
+        case n of
+          Right b -> assertFailure $ "should fail" <> show b
+          Left _ -> pure ()
     ]
 
 parseNumber :: TestTree
@@ -118,7 +128,12 @@ parseText =
         let n = runParser text "text" "     \"some text \nbetween quotes\""
         case n of
           Right t -> assertEqual "should be equal" "some text \nbetween quotes" t
-          Left e -> assertFailure $ errorBundlePretty e
+          Left e -> assertFailure $ errorBundlePretty e,
+      testCase "json-parse-text-missing-closing-quote" $ do
+        let n = runParser text "text" "     \"some text \nbetween quotes"
+        case n of
+          Right t -> assertFailure $ "Missing quote should cause failure" <> show t
+          Left _ -> pure ()
     ]
 
 parseArray :: TestTree
@@ -129,7 +144,46 @@ parseArray =
         let a = runParser array "array" "[]"
         case a of
           Left e -> assertFailure $ errorBundlePretty e
-          Right a' -> assertEqual "should be empty" [] a'
+          Right a' -> assertEqual "should be empty" [] a',
+      testCase "json-parse-array-invalid-missing-closing" $ do
+        let a = runParser array "array" "[1, "
+        case a of
+          Left _ -> pure ()
+          Right a' -> assertFailure $ "Missing closing ']' should fail" <> show a',
+      testCase "json-parse-array-invalid-missing-comma" $ do
+        let a = runParser array "array" "[1 2]"
+        case a of
+          Left _ -> pure ()
+          Right a' -> assertFailure $ "Missing comma should fail" <> show a',
+      testCase "json-parse-array-invalid-wrong-data" $ do
+        let a = runParser array "array" "[1, x]"
+        case a of
+          Left _ -> pure ()
+          Right a' -> assertFailure $ "Invalid data should fail" <> show a',
+      testCase "json-parse-array-of-num" $ do
+        let a = runParser array "array" "  [1, 10.5,\n\n\t-10 ]  "
+        case a of
+          Left e -> assertFailure $ errorBundlePretty e
+          Right a' -> do
+            let firstItem = JNumber 1.0
+                secondItem = JNumber 10.5
+                thirdItem = JNumber $ -10.0
+            assertEqual "should be equal" [firstItem, secondItem, thirdItem] a',
+      testCase "json-parse-array-heterogeneous-no-object" $ do
+        let a = runParser array "array" "  [1, null, false, \"hello\", [-2]]  "
+        case a of
+          Left e -> assertFailure $ errorBundlePretty e
+          Right a' -> do
+            let firstItem = JNumber 1.0
+                secondItem = JNull
+                thirdItem = JBool False
+                fourthItem = JText "hello"
+                fifthItem = JArray [JNumber $ -2]
+            assertEqual
+              "should be equal"
+              [firstItem, secondItem, thirdItem, fourthItem, fifthItem]
+              a'
+              -- todo: add array of objects tests
     ]
 
 jsonTests :: TestTree
