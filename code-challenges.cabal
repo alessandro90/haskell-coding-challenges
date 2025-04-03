@@ -183,4 +183,5 @@ test-suite code-challenges-test
         tasty-hunit ^>=0.10.2,
         text,
         bytestring,
+        containers,
         megaparsec ^>=9.7.0

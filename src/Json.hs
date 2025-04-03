@@ -49,6 +49,7 @@ array = space >> delimited '[' ']' (commaSep $ value <* space)
 object :: Parser Object
 object = M.fromList <$> (space >> delimited '{' '}' (commaSep $ keyValue <* space))
 
+-- | The main function
 parseJson :: Text -> Either String Object
 parseJson = first errorBundlePretty . runParser (object <* space <* eof) "json"
 
