@@ -83,7 +83,10 @@ library
     import:           warnings, global-extensions
 
     -- Modules exported by the library.
-    exposed-modules:  Ccw, Misc, Json
+    exposed-modules:  Ccw,
+                      Misc,
+                      Json,
+                      Huffman
 
     -- Modules included in this library but not exported.
     -- other-modules: 
@@ -97,7 +100,8 @@ library
                       bytestring,
                       transformers,
                       containers,
-                      megaparsec ^>=9.7.0
+                      megaparsec ^>=9.7.0,
+                      pqueue ^>=1.5.0.0
 
     -- Directories containing source files.
     hs-source-dirs:   src
@@ -163,7 +167,10 @@ test-suite code-challenges-test
     default-language: Haskell2010
 
     -- Modules included in this executable, other than Main.
-    other-modules: CcwTest, MiscTest, JsonTest
+    other-modules: CcwTest,
+                   MiscTest,
+                   JsonTest,
+                   HuffmanTest
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -186,4 +193,5 @@ test-suite code-challenges-test
         text,
         bytestring,
         containers,
-        megaparsec ^>=9.7.0
+        megaparsec ^>=9.7.0,
+        pqueue ^>=1.5.0.0

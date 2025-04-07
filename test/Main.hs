@@ -4,6 +4,7 @@ module Main (main) where
 -- cabal test --test-options "-p Should-be-2"
 
 import CcwTest (parseArgsTests)
+import HuffmanTest (huffmanTests)
 import JsonTest (jsonTests)
 import MiscTest (startsWithTests)
 import Test.Tasty
@@ -14,7 +15,8 @@ allTests =
     "all-tests"
     [ startsWithTests,
       parseArgsTests,
-      jsonTests
+      jsonTests,
+      huffmanTests
     ]
 
 main :: IO ()
