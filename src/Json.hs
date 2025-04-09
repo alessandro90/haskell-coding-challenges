@@ -4,6 +4,8 @@ module Json where
 
 import Control.Monad (void)
 import Data.Bifunctor (Bifunctor (first))
+import Data.Bits (shiftL, (.|.))
+import Data.Char (digitToInt)
 import qualified Data.Map.Strict as M
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -40,8 +42,40 @@ delimited l r = between (wschar l) (wschar r)
 boolean :: Parser Bool
 boolean = space >> (True <$ string "true") <|> (False <$ string "false")
 
+escape :: Parser Char
+escape = char '\\' >> escaped
+  where
+    escaped =
+      char '"'
+        <|> char '\\'
+        <|> char '\"'
+        <|> char '/'
+        <|> unicode
+        <|> (char 'b' >> pure '\b')
+        <|> (char 'f' >> pure '\f')
+        <|> (char 'n' >> pure '\n')
+        <|> (char 'r' >> pure '\r')
+        <|> (char 't' >> pure '\t')
+
+    unicode = do
+      void $ char 'u'
+      d0 <- hexToShiftedInt 12
+      d1 <- hexToShiftedInt 8
+      d2 <- hexToShiftedInt 4
+      d3 <- digitToInt <$> hexDigitChar
+      let n = d0 .|. d1 .|. d2 .|. d3
+      pure $ toEnum n
+      where
+        hexToShiftedInt offset =
+          flip shiftL offset . digitToInt <$> hexDigitChar
+
 text :: Parser Text
-text = space >> char '"' *> (T.pack <$> manyTill L.charLiteral (char '"'))
+text =
+  space
+    >> char '"'
+      *> ( T.pack
+             <$> manyTill (try escape <|> L.charLiteral) (char '"')
+         )
 
 array :: Parser [Value]
 array = space >> delimited '[' ']' (commaSep $ value <* space)
@@ -60,7 +94,7 @@ commaSep :: Parser a -> Parser [a]
 commaSep p = p `sepBy` wschar ','
 
 key :: Parser String
-key = T.unpack <$> (space >> text)
+key = T.unpack <$> text
 
 value :: Parser Value
 value =

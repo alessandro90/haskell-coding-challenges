@@ -106,6 +106,26 @@ parseNumber =
         let n = runParser number "num" "\n10"
         case n of
           Right n' -> assertEqual "should be 10" 10 n'
+          Left e -> assertFailure $ errorBundlePretty e,
+      testCase "json-parse-number-exp" $ do
+        let n = runParser number "num" "1e2"
+        case n of
+          Right n' -> assertEqual "should be 100" 100 n'
+          Left e -> assertFailure $ errorBundlePretty e,
+      testCase "json-parse-number-exp-neg" $ do
+        let n = runParser number "num" "100e-2"
+        case n of
+          Right n' -> assertEqual "should be 1" 1 n'
+          Left e -> assertFailure $ errorBundlePretty e,
+      testCase "json-parse-number-exp-pos" $ do
+        let n = runParser number "num" "1e+2"
+        case n of
+          Right n' -> assertEqual "should be 100" 100 n'
+          Left e -> assertFailure $ errorBundlePretty e,
+      testCase "json-parse-number-exp-uppercase" $ do
+        let n = runParser number "num" "1E+2"
+        case n of
+          Right n' -> assertEqual "should be 100" 100 n'
           Left e -> assertFailure $ errorBundlePretty e
     ]
 
@@ -134,7 +154,12 @@ parseText =
         let n = runParser text "text" "     \"some text \nbetween quotes"
         case n of
           Right t -> assertFailure $ "Missing quote should cause failure" <> show t
-          Left _ -> pure ()
+          Left _ -> pure (),
+      testCase "json-parse-text-escape" $ do
+        let n = runParser text "text" "\"Some text \\n\""
+        case n of
+          Right t -> assertEqual "should be a text with newlinw" t "Some text \n"
+          Left e -> assertFailure $ "expected text with newline, got error " <> show e
     ]
 
 parseArray :: TestTree
@@ -305,6 +330,57 @@ parseJsonFn =
                 err -> assertFailure $ "expected an object, got " <> show err
     ]
 
+parseEscape :: TestTree
+parseEscape =
+  testGroup
+    "json-parse-escape"
+    [ testCase "json-parse-escape-quote" $ do
+        let c = runParser escape "escape" "\\\""
+        case c of
+          Left e -> assertFailure $ "Expect quote, got error " <> errorBundlePretty e
+          Right x -> assertEqual "should be a quote" '\"' x,
+      testCase "json-parse-escape-backslash" $ do
+        let c = runParser escape "escape" "\\\\"
+        case c of
+          Left e -> assertFailure $ "Expect backslash, got error " <> errorBundlePretty e
+          Right x -> assertEqual "should be a backslash" '\\' x,
+      testCase "json-parse-escape-slash" $ do
+        let c = runParser escape "escape" "\\/"
+        case c of
+          Left e -> assertFailure $ "Expect slash, got error " <> errorBundlePretty e
+          Right x -> assertEqual "should be a slash" '/' x,
+      testCase "json-parse-escape-unicode" $ do
+        let c = runParser escape "escape" "\\u03A9"
+        case c of
+          Left e -> assertFailure $ "Expect unicode, got error " <> errorBundlePretty e
+          Right x -> assertEqual "should be a unicode" '\x03A9' x,
+      testCase "json-parse-escape-backspace" $ do
+        let c = runParser escape "escape" "\\b"
+        case c of
+          Left e -> assertFailure $ "Expect backspace, got error " <> errorBundlePretty e
+          Right x -> assertEqual "should be a backspace" '\b' x,
+      testCase "json-parse-escape-formfeed" $ do
+        let c = runParser escape "escape" "\\f"
+        case c of
+          Left e -> assertFailure $ "Expect formfeed, got error " <> errorBundlePretty e
+          Right x -> assertEqual "should be a formfeed" '\f' x,
+      testCase "json-parse-escape-newline" $ do
+        let c = runParser escape "escape" "\\n"
+        case c of
+          Left e -> assertFailure $ "Expect newline, got error " <> errorBundlePretty e
+          Right x -> assertEqual "should be a newline" '\n' x,
+      testCase "json-parse-escape-carriage-return" $ do
+        let c = runParser escape "escape" "\\r"
+        case c of
+          Left e -> assertFailure $ "Expect carriage-return, got error " <> errorBundlePretty e
+          Right x -> assertEqual "should be a carriage-return" '\r' x,
+      testCase "json-parse-escape-tab" $ do
+        let c = runParser escape "escape" "\\t"
+        case c of
+          Left e -> assertFailure $ "Expect tsb, got error " <> errorBundlePretty e
+          Right x -> assertEqual "should be a tab" '\t' x
+    ]
+
 jsonTests :: TestTree
 jsonTests =
   testGroup
@@ -315,7 +391,8 @@ jsonTests =
       parseText,
       parseArray,
       parseObject,
-      parseJsonFn
+      parseJsonFn,
+      parseEscape
     ]
 
 checkMapKey :: String -> Value -> M.Map String Value -> IO ()
