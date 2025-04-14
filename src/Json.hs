@@ -6,6 +6,7 @@ import Control.Monad (void)
 import Data.Bifunctor (Bifunctor (first))
 import Data.Bits (shiftL, (.|.))
 import Data.Char (digitToInt)
+import Data.Function (on)
 import qualified Data.Map.Strict as M
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -17,16 +18,20 @@ import Prelude hiding (null)
 
 type Parser = Parsec Void Text
 
-data Value
+data JValue
   = JBool Bool
   | JNumber Double
   | JText Text
-  | JArray [Value]
+  | JArray [JValue]
   | JObject Object
   | JNull
   deriving (Show, Eq)
 
-type Object = M.Map String Value
+type Object = M.Map String JValue
+
+-- | The main function
+parseJson :: Text -> Either String Object
+parseJson = first errorBundlePretty . runParser (object <* space <* eof) "json"
 
 null :: Parser ()
 null = space >> void (string "null")
@@ -37,7 +42,7 @@ number = space >> L.signed space unsigned
     unsigned = try L.float <|> fromIntegral @Int <$> L.decimal
 
 delimited :: Char -> Char -> Parser a -> Parser a
-delimited l r = between (wschar l) (wschar r)
+delimited = between `on` wschar
 
 boolean :: Parser Bool
 boolean = space >> (True <$ string "true") <|> (False <$ string "false")
@@ -51,11 +56,13 @@ escape = char '\\' >> escaped
         <|> char '\"'
         <|> char '/'
         <|> unicode
-        <|> (char 'b' >> pure '\b')
-        <|> (char 'f' >> pure '\f')
-        <|> (char 'n' >> pure '\n')
-        <|> (char 'r' >> pure '\r')
-        <|> (char 't' >> pure '\t')
+        <|> replace 'b' '\b'
+        <|> replace 'f' '\f'
+        <|> replace 'n' '\n'
+        <|> replace 'r' '\r'
+        <|> replace 't' '\t'
+      where
+        replace c c' = char c >> pure c'
 
     unicode = do
       void $ char 'u'
@@ -63,29 +70,23 @@ escape = char '\\' >> escaped
       d1 <- hexToShiftedInt 8
       d2 <- hexToShiftedInt 4
       d3 <- digitToInt <$> hexDigitChar
-      let n = d0 .|. d1 .|. d2 .|. d3
-      pure $ toEnum n
+      pure $ toEnum $ d0 .|. d1 .|. d2 .|. d3
       where
         hexToShiftedInt offset =
           flip shiftL offset . digitToInt <$> hexDigitChar
 
 text :: Parser Text
-text =
-  space
-    >> char '"'
-      *> ( T.pack
-             <$> manyTill (try escape <|> L.charLiteral) (char '"')
-         )
+text = space >> char '"' >> (T.pack <$> manyTill chars (char '"'))
+  where
+    chars = try escape <|> L.charLiteral
 
-array :: Parser [Value]
+array :: Parser [JValue]
 array = space >> delimited '[' ']' (commaSep $ value <* space)
 
 object :: Parser Object
-object = M.fromList <$> (space >> delimited '{' '}' (commaSep $ keyValue <* space))
-
--- | The main function
-parseJson :: Text -> Either String Object
-parseJson = first errorBundlePretty . runParser (object <* space <* eof) "json"
+object = M.fromList <$> (space >> obj)
+  where
+    obj = delimited '{' '}' (commaSep $ keyJValue <* space)
 
 wschar :: Char -> Parser Char
 wschar c = space >> char c
@@ -96,7 +97,7 @@ commaSep p = p `sepBy` wschar ','
 key :: Parser String
 key = T.unpack <$> text
 
-value :: Parser Value
+value :: Parser JValue
 value =
   (JBool <$> try boolean)
     <|> (JNull <$ try null)
@@ -105,9 +106,9 @@ value =
     <|> (JArray <$> try array)
     <|> (JObject <$> object)
 
-keyValue :: Parser (String, Value)
-keyValue = do
+keyJValue :: Parser (String, JValue)
+keyJValue = do
   k <- key
-  _ <- wschar ':'
+  void $ wschar ':'
   v <- value
   pure (k, v)

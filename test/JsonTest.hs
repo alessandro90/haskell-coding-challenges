@@ -395,7 +395,7 @@ jsonTests =
       parseEscape
     ]
 
-checkMapKey :: String -> Value -> M.Map String Value -> IO ()
+checkMapKey :: String -> JValue -> Object -> IO ()
 checkMapKey k v m = case M.lookup k m of
   Nothing -> assertFailure $ "Key " <> k <> " not found"
   Just v' -> assertEqual "should be equal" v v'
