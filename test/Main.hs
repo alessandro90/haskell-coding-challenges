@@ -6,14 +6,14 @@ module Main (main) where
 import CcwTest (parseArgsTests)
 import HuffmanTest (huffmanTests)
 import JsonTest (jsonTests)
-import MiscTest (startsWithTests)
+import MiscTest (miscTests)
 import Test.Tasty
 
 allTests :: TestTree
 allTests =
   testGroup
     "all-tests"
-    [ startsWithTests,
+    [ miscTests,
       parseArgsTests,
       jsonTests,
       huffmanTests

@@ -1,6 +1,9 @@
-module MiscTest (startsWithTests) where
+{-# LANGUAGE BinaryLiterals #-}
 
-import Misc (startsWith, startsWithItem)
+module MiscTest (miscTests) where
+
+import qualified Data.ByteString as BS
+import Misc (bsToBinaryString, startsWith, startsWithItem, w8ToBinaryString)
 import Test.Tasty
 import Test.Tasty.HUnit
 
@@ -26,21 +29,39 @@ startsWithMatchingTest =
 
 startsWithItemEmptyList :: TestTree
 startsWithItemEmptyList =
-  testCase "starts-with-item-empty-list" $ do
+  testCase "misc-starts-with-item-empty-list" $ do
     not (startsWithItem (0 :: Int) []) @? "Should be false"
 
 startsWithItemMatchList :: TestTree
 startsWithItemMatchList =
-  testCase "starts-with-item-match-list" $ do
+  testCase "misc-starts-with-item-match-list" $ do
     startsWithItem (0 :: Int) [0, 1] @? "Should be true"
 
 startsWithItemNonMatchList :: TestTree
 startsWithItemNonMatchList =
-  testCase "starts-with-item-non-match-list" $ do
+  testCase "misc-starts-with-item-non-match-list" $ do
     not (startsWithItem (0 :: Int) [2, 1]) @? "Should be false"
 
-startsWithTests :: TestTree
-startsWithTests =
+w8ToStringTest :: TestTree
+w8ToStringTest =
+  testCase "misc-w8-to-string" $ do
+    let n = 0b11011101
+        s = w8ToBinaryString n
+    assertEqual "binary repr" "11011101" s
+
+bsToStringTest :: TestTree
+bsToStringTest =
+  testCase "misc-bs-to-string" $ do
+    let b0 = 0b11011100
+        b1 = 0b10010101
+        b2 = 0b10011100
+        b3 = 0b11011001
+        bs = BS.reverse $ b0 `BS.cons` b1 `BS.cons` b2 `BS.cons` b3 `BS.cons` BS.empty
+        s = bsToBinaryString bs
+    assertEqual "binary repr" "11011100100101011001110011011001" s
+
+miscTests :: TestTree
+miscTests =
   testGroup
     "starts-with"
     [ startsWithEmptyPrefixTest,
@@ -49,5 +70,7 @@ startsWithTests =
       startsWithMatchingTest,
       startsWithItemEmptyList,
       startsWithItemMatchList,
-      startsWithItemNonMatchList
+      startsWithItemNonMatchList,
+      w8ToStringTest,
+      bsToStringTest
     ]
