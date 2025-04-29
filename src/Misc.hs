@@ -27,4 +27,4 @@ w8ToBinaryString = go 0 []
     bitAnd w offset = if w .&. (1 `shiftL` offset) == 0 then '0' else '1'
 
 bsToBinaryString :: BS.ByteString -> String
-bsToBinaryString = BS.foldl' (\acc w -> w8ToBinaryString w <> acc) ""
+bsToBinaryString = reverse . BS.foldl' (\acc w -> w8ToBinaryString w <> acc) ""

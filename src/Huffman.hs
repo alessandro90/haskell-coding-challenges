@@ -60,7 +60,7 @@ codes = go M.empty []
 encode :: M.Map Word8 [Bit] -> ByteString -> Either Word8 (ByteString, Word32)
 encode m bs =
   let encoded = BS.foldl' accumulateBytes (Right (bfEmpty, 0)) bs
-   in encoded <&> first bytes
+   in encoded <&> first bfAllBytes
   where
     accumulateBytes accumulator w = do
       (bitbuffer, c) <- accumulator
@@ -94,5 +94,5 @@ bfPush bf@BitBuffer {bytes, byte, byteIndex} b
 
 bfAllBytes :: BitBuffer -> BS.ByteString
 bfAllBytes bf
-  | byteIndex bf == 0 = bytes bf
-  | otherwise = bytes bf `BS.append` BS.singleton (byte bf)
+  | byteIndex bf == 0 = BS.reverse $ bytes bf
+  | otherwise = BS.reverse (bytes bf) `BS.append` BS.singleton (byte bf)

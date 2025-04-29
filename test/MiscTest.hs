@@ -56,9 +56,9 @@ bsToStringTest =
         b1 = 0b10010101
         b2 = 0b10011100
         b3 = 0b11011001
-        bs = BS.reverse $ b0 `BS.cons` b1 `BS.cons` b2 `BS.cons` b3 `BS.cons` BS.empty
+        bs = b0 `BS.cons` b1 `BS.cons` b2 `BS.cons` b3 `BS.cons` BS.empty
         s = bsToBinaryString bs
-    assertEqual "binary repr" "11011100100101011001110011011001" s
+    assertEqual "binary repr" "00111011101010010011100110011011" s
 
 miscTests :: TestTree
 miscTests =

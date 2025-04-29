@@ -197,12 +197,12 @@ bitBufferTest =
               ]
             bf = foldl' bfPush bfEmpty toPush
             b0 = 1 .|. (1 `shiftL` 3) .|. (1 `shiftL` 4) .|. (1 `shiftL` 5) .|. (1 `shiftL` 6)
-            expected = BS.reverse $ b0 `BS.cons` BS.empty
+            expected = b0 `BS.cons` BS.empty
             bbs = bfAllBytes bf
         assertEqual "bytes strings should be equal" (bsToBinaryString expected) (bsToBinaryString bbs),
       testCase "huffman-bit-buffer-1-bit" $ do
         let bf = bfPush bfEmpty BitOn
-            expected = "00000001"
+            expected = "10000000"
             bbs = bfAllBytes bf
         assertEqual "bytes strings should be equal" expected (bsToBinaryString bbs),
       testCase "huffman-bit-buffer-1-and-a-half-bytes" $ do
@@ -225,7 +225,35 @@ bitBufferTest =
             b1 = (1 `shiftL` 2) .|. (1 `shiftL` 3)
             expected = b0 `BS.cons` b1 `BS.cons` BS.empty
             bbs = bfAllBytes bf
-        assertEqual "bytes strings should be equal" expected bbs
+        assertEqual "bytes strings should be equal" expected bbs,
+      testCase "huffman-bit-buffer-more-bytes" $ do
+        let toPush =
+              [ BitOff,
+                BitOn,
+                BitOn,
+                --
+                BitOff,
+                BitOn,
+                BitOn,
+                --
+                BitOff,
+                BitOff,
+                BitOn,
+                BitOn,
+                --
+                BitOn,
+                BitOff,
+                BitOff,
+                BitOff,
+                --
+                BitOff,
+                BitOn,
+                BitOn
+              ]
+            bf = foldl' bfPush bfEmpty toPush
+            expected = "011011001110000110000000"
+            bbs = bfAllBytes bf
+        assertEqual "bytes strings should be equal" expected $ bsToBinaryString bbs
     ]
 
 codesTest :: TestTree
@@ -304,11 +332,10 @@ encodeTest =
         case encoded of
           Left e -> assertFailure $ "expected bytestring, got error byte '" <> show e <> "'"
           Right (bs, letterCount) -> do
-            let expectedBytes =
-                  bfAllBytes $
-                    bitBufferFrom $
-                      fakeACodes <> fakeACodes <> fakeBCodes <> fakeCCodes <> fakeACodes
+            let expectedBs = fakeACodes <> fakeACodes <> fakeBCodes <> fakeCCodes <> fakeACodes
+                expectedBytes = bfAllBytes $ bitBufferFrom expectedBs
             assertEqual "check total letters written" 5 letterCount
+            assertEqual "bytes should be equal" (bsToBinaryString expectedBytes) (bsToBinaryString bs)
     ]
 
 huffmanTests :: TestTree
