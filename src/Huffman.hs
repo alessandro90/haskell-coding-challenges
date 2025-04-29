@@ -66,9 +66,7 @@ encode m bs =
       (bitbuffer, c) <- accumulator
       case M.lookup w m of
         Nothing -> Left w
-        Just bs' ->
-          let accumulate (bitbuffer', c') bit = (bfPush bitbuffer' bit, succ c')
-           in Right $ foldl' accumulate (bitbuffer, c) bs'
+        Just bits -> Right (foldl' bfPush bitbuffer bits, succ c)
 
 data BitBuffer = BitBuffer
   { bytes :: BS.ByteString,
@@ -84,25 +82,14 @@ bfEmpty = BitBuffer {bytes = BS.empty, byte = 0, byteIndex = 0}
 
 bfPush :: BitBuffer -> Bit -> BitBuffer
 bfPush bf@BitBuffer {bytes, byte, byteIndex} b
-  | byteIndex == 7 = case b of
-      BitOn ->
-        BitBuffer
-          { byte = 0,
-            bytes = BS.singleton (byte .|. 1 `shiftL` 7) `BS.append` bytes,
-            byteIndex = 0
-          }
-      BitOff ->
-        BitBuffer
-          { byte = 0,
-            bytes = BS.singleton byte `BS.append` bytes,
-            byteIndex = 0
-          }
+  | byteIndex == 7 =
+      let byte' = if b == BitOn then byte .|. 1 `shiftL` 7 else byte
+          bytes'' = BS.singleton byte' `BS.append` bytes
+       in BitBuffer {byte = 0, bytes = bytes'', byteIndex = 0}
   | otherwise = case b of
       BitOn ->
-        bf
-          { byte = byte .|. 1 `shiftL` byteIndex,
-            byteIndex = byteIndex + 1
-          }
+        let byte' = byte .|. 1 `shiftL` byteIndex
+         in bf {byte = byte', byteIndex = byteIndex + 1}
       BitOff -> bf {byteIndex = byteIndex + 1}
 
 bfAllBytes :: BitBuffer -> BS.ByteString

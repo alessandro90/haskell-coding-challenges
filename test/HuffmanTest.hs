@@ -11,6 +11,7 @@ import qualified Data.PQueue.Min as PQ
 import Data.Word (Word8)
 import Huffman
   ( Bit (BitOff, BitOn),
+    BitBuffer,
     Tree (Leaf, Node),
     bfAllBytes,
     bfEmpty,
@@ -18,6 +19,7 @@ import Huffman
     buildTree,
     codes,
     countFreq,
+    encode,
     leaf,
   )
 import Misc (bsToBinaryString)
@@ -272,6 +274,43 @@ codesTest =
           Just k -> assertFailure $ "expected nothing, got " <> show k
     ]
 
+fakeACodes :: [Bit]
+fakeACodes = [BitOff, BitOn, BitOn]
+
+fakeBCodes :: [Bit]
+fakeBCodes = [BitOff, BitOff, BitOn, BitOn]
+
+fakeCCodes :: [Bit]
+fakeCCodes = [BitOn, BitOff, BitOff, BitOff]
+
+fakeMap :: M.Map Word8 [Bit]
+fakeMap =
+  let l =
+        [ (c2w 'A', fakeACodes),
+          (c2w 'B', fakeBCodes),
+          (c2w 'C', fakeCCodes)
+        ]
+   in M.fromList l
+
+bitBufferFrom :: [Bit] -> BitBuffer
+bitBufferFrom = foldl' bfPush bfEmpty
+
+encodeTest :: TestTree
+encodeTest =
+  testGroup
+    "huffman-encode"
+    [ testCase "huffman-encode-fake-map" $ do
+        let encoded = encode fakeMap "AABCA"
+        case encoded of
+          Left e -> assertFailure $ "expected bytestring, got error byte '" <> show e <> "'"
+          Right (bs, letterCount) -> do
+            let expectedBytes =
+                  bfAllBytes $
+                    bitBufferFrom $
+                      fakeACodes <> fakeACodes <> fakeBCodes <> fakeCCodes <> fakeACodes
+            assertEqual "check total letters written" 5 letterCount
+    ]
+
 huffmanTests :: TestTree
 huffmanTests =
   testGroup
@@ -281,5 +320,6 @@ huffmanTests =
       treeCreationTest,
       treeFunctorTest,
       bitBufferTest,
-      codesTest
+      codesTest,
+      encodeTest
     ]

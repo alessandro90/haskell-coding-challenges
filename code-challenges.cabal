@@ -95,7 +95,7 @@ library
     -- other-extensions:
 
     -- Other library packages from which modules are imported.
-    build-depends:    base ^>=4.17.2.1,
+    build-depends:    base ^>=4.18.3.0,
                       text,
                       bytestring,
                       transformers,
@@ -124,7 +124,7 @@ executable ccw
 
     -- Other library packages from which modules are imported.
     build-depends:
-        base ^>=4.17.2.1,
+        base ^>=4.18.3.0,
         code-challenges
 
     -- Directories containing source files.
@@ -148,7 +148,7 @@ executable json
 
     -- Other library packages from which modules are imported.
     build-depends:
-        base ^>=4.17.2.1,
+        base ^>=4.18.3.0,
         text,
         pretty-simple ^>=4.1.3.0,
         code-challenges
@@ -186,7 +186,7 @@ test-suite code-challenges-test
 
     -- Test dependencies.
     build-depends:
-        base ^>=4.17.2.1,
+        base ^>=4.18.3.0,
         code-challenges,
         tasty ^>=1.5.3,
         tasty-hunit ^>=0.10.2,
