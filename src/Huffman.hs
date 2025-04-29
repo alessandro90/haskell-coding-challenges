@@ -84,7 +84,7 @@ bfPush :: BitBuffer -> Bit -> BitBuffer
 bfPush bf@BitBuffer {bytes, byte, byteIndex} b
   | byteIndex == 7 =
       let byte' = if b == BitOn then byte .|. 1 `shiftL` 7 else byte
-          bytes'' = BS.singleton byte' `BS.append` bytes
+          bytes'' = byte' `BS.cons` bytes
        in BitBuffer {byte = 0, bytes = bytes'', byteIndex = 0}
   | otherwise = case b of
       BitOn ->
