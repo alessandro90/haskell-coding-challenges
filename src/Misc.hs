@@ -19,12 +19,18 @@ digitsNr n
   | otherwise = 1 + digitsNr (n `mod` 10)
 
 w8ToBinaryString :: Word8 -> String
-w8ToBinaryString = go 0 []
-  where
-    go offset acc w
-      | offset == 7 = bitAnd w offset : acc
-      | otherwise = go (offset + 1) (bitAnd w offset : acc) w
-    bitAnd w offset = if w .&. (1 `shiftL` offset) == 0 then '0' else '1'
+w8ToBinaryString = w8FoldBits (\s bit -> s <> (if bit then "1" else "0")) ""
 
 bsToBinaryString :: BS.ByteString -> String
-bsToBinaryString = reverse . BS.foldl' (\acc w -> w8ToBinaryString w <> acc) ""
+bsToBinaryString = bsFoldBits (\s bit -> s <> (if bit then "1" else "0")) ""
+
+bsFoldBits :: (a -> Bool -> a) -> a -> BS.ByteString -> a
+bsFoldBits = BS.foldl' . w8FoldBits
+
+w8FoldBits :: (a -> Bool -> a) -> a -> Word8 -> a
+w8FoldBits f acc w = go 0 acc
+  where
+    go idx acc'
+      | idx == 7 = f acc' (getBit 7)
+      | otherwise = go (succ idx) $ f acc' $ getBit idx
+    getBit idx = w .&. (1 `shiftL` idx) /= 0

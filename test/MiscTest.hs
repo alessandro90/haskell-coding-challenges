@@ -3,7 +3,7 @@
 module MiscTest (miscTests) where
 
 import qualified Data.ByteString as BS
-import Misc (bsToBinaryString, startsWith, startsWithItem, w8ToBinaryString)
+import Misc (bsToBinaryString, startsWith, startsWithItem, w8FoldBits, w8ToBinaryString)
 import Test.Tasty
 import Test.Tasty.HUnit
 
@@ -47,7 +47,7 @@ w8ToStringTest =
   testCase "misc-w8-to-string" $ do
     let n = 0b11011101
         s = w8ToBinaryString n
-    assertEqual "binary repr" "11011101" s
+    assertEqual "binary repr" "10111011" s
 
 bsToStringTest :: TestTree
 bsToStringTest =
@@ -59,6 +59,13 @@ bsToStringTest =
         bs = b0 `BS.cons` b1 `BS.cons` b2 `BS.cons` b3 `BS.cons` BS.empty
         s = bsToBinaryString bs
     assertEqual "binary repr" "00111011101010010011100110011011" s
+
+w8FoldBitsTest :: TestTree
+w8FoldBitsTest =
+  testCase "misc-w8-fold-bits" $ do
+    let w8 = 0b11000111
+    let str = w8FoldBits (\s bit -> s <> (if bit then "1" else "0")) "" w8
+    assertEqual "should be equal" "11100011" str
 
 miscTests :: TestTree
 miscTests =
@@ -72,5 +79,6 @@ miscTests =
       startsWithItemMatchList,
       startsWithItemNonMatchList,
       w8ToStringTest,
-      bsToStringTest
+      bsToStringTest,
+      w8FoldBitsTest
     ]
