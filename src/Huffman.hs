@@ -1,16 +1,20 @@
 module Huffman where
 
+import Control.Monad (when)
+import Control.Monad.ST (runST)
 import Data.Bifunctor (Bifunctor (first, second))
 import Data.Bits (shiftL, (.|.))
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Internal as BSI
-import Data.Functor ((<&>))
+import Data.Functor (void, (<&>))
 import Data.List (foldl')
 import qualified Data.Map.Strict as M
 import Data.PQueue.Min (MinQueue)
 import qualified Data.PQueue.Min as PQ
+import Data.STRef (modifySTRef, newSTRef, readSTRef)
 import Data.Word (Word32, Word8)
+import Misc (bsTraverseBits)
 
 data Tree a
   = Node Int (Tree a) (Tree a)
@@ -67,6 +71,42 @@ encode m bs =
       case M.lookup w m of
         Nothing -> Left w
         Just bits -> Right (foldl' bfPush bitbuffer bits, succ c)
+
+data DecodeState
+  = DecodeState
+  { originalTree :: Tree Word8,
+    originalByteCount :: Word32,
+    currentTree :: Tree Word8,
+    currentByteCount :: Word32
+  }
+
+-- check out Binary package, in particular the BitGet monad
+
+-- TODO: implement with State monad
+decode :: Tree Word8 -> Word32 -> ByteString -> Maybe ByteString
+decode fullTree totalCodes encoded = runST $ do
+  subtreeRef <- newSTRef fullTree
+  parsedCodesRef <- newSTRef totalCodes
+  decodedRef <- newSTRef $ Just BS.empty
+  let forEachBit bit = do
+        parsedCodes <- readSTRef parsedCodesRef
+        when (parsedCodes < totalCodes) $ do
+          subtree <- readSTRef subtreeRef
+          case subtree of
+            Node _ l r ->
+              let subtree' = if bit then l else r
+               in case subtree' of
+                    Leaf (_, b) -> do
+                      modifySTRef decodedRef $ fmap $ BS.cons b
+                      modifySTRef parsedCodesRef succ
+                      modifySTRef subtreeRef $ const fullTree
+                    node -> modifySTRef subtreeRef $ const node
+            Leaf _ -> do
+              -- this is an error. We should never arrive here
+              modifySTRef decodedRef $ const Nothing
+              modifySTRef parsedCodesRef $ const totalCodes
+  bsTraverseBits forEachBit encoded
+  fmap BS.reverse <$> readSTRef decodedRef
 
 data BitBuffer = BitBuffer
   { bytes :: BS.ByteString,

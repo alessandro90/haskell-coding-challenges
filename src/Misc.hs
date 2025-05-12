@@ -34,3 +34,37 @@ w8FoldBits f acc w = go 0 acc
       | idx == 7 = f acc' (getBit 7)
       | otherwise = go (succ idx) $ f acc' $ getBit idx
     getBit idx = w .&. (1 `shiftL` idx) /= 0
+
+bsToBits :: BS.ByteString -> [Bool]
+bsToBits = reverse . bsFoldBits (flip (:)) []
+
+bsTraverseBits :: (Monoid a, Monad m) => (Bool -> m a) -> BS.ByteString -> m a
+bsTraverseBits f = BS.foldl' (\_ w -> w8TraverseBits f w) $ pure mempty
+
+w8TraverseBits :: (Monad m) => (Bool -> m a) -> Word8 -> m a
+w8TraverseBits f w = go 0
+  where
+    go idx
+      | idx == 7 = f $ getBit 7
+      | otherwise = f (getBit idx) >> go (succ idx)
+    getBit idx = w .&. (1 `shiftL` idx) /= 0
+
+-- w8TraverseBits' :: (Monad m) => (a -> Bool -> m a) -> a -> Word8 -> m a
+-- w8TraverseBits' f acc w = go 0 acc
+--   where
+--     go idx acc'
+--       | idx == 7 = f acc' $ getBit 7
+--       | otherwise = do
+--           ma <- f acc' (getBit idx)
+--           go (succ idx) ma
+--     getBit idx = w .&. (1 `shiftL` idx) /= 0
+--
+-- bsTraverseBits' :: (Monad m) => (a -> Bool -> m a) -> a -> BS.ByteString -> m a
+-- bsTraverseBits' f acc bs =
+--   BS.foldl'
+--     ( \ma w -> do
+--         ma' <- ma
+--         w8TraverseBits' f ma' w
+--     )
+--     acc
+--     bs
