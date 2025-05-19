@@ -20,6 +20,7 @@ import Huffman
     codes,
     countFreq,
     decode,
+    decodeWithState,
     encode,
     leaf,
   )
@@ -355,9 +356,6 @@ decodeTest =
             case encodedStr of
               Left e -> assertFailure $ "Expected a valid encoded str: " <> show e
               Right (es, letterCount) -> do
-                putStrLn $ bsToBinaryString es
-                print strCodes
-                print strTree'
                 let decodedStr = decode strTree' letterCount es
                 case decodedStr of
                   Nothing -> assertFailure "expected a decoded str, got nothing"

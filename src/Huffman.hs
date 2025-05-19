@@ -2,7 +2,6 @@ module Huffman where
 
 import Control.Monad (when)
 import Control.Monad.ST (runST)
-import Control.Monad.Trans.State (execState, get, put)
 import Data.Bifunctor (Bifunctor (first, second))
 import Data.Bits (shiftL, (.|.))
 import Data.ByteString (ByteString)
@@ -72,54 +71,6 @@ encode m bs =
       case M.lookup w m of
         Nothing -> Left w
         Just bits -> Right (foldl' bfPush bitbuffer bits, succ c)
-
-data DecodeState
-  = DecodeState
-  { originalTree :: Tree Word8,
-    originalByteCount :: Word32,
-    currentTree :: Tree Word8,
-    currentByteCount :: Word32,
-    encoded :: BS.ByteString,
-    decoded :: Maybe BS.ByteString
-  }
-
-decodeWithState :: Tree Word8 -> Word32 -> ByteString -> Maybe ByteString
-decodeWithState t c bs =
-  let initState =
-        DecodeState
-          { originalTree = t,
-            originalByteCount = c,
-            currentTree = t,
-            currentByteCount = 0,
-            encoded = bs,
-            decoded = Just BS.empty
-          }
-   in fmap BS.reverse <$> decoded $ execState decode' initState
-  where
-    decode' = do
-      s <- get
-      bsTraverseBits
-        ( \bit -> do
-            let parsedCodes = currentByteCount s
-            when (parsedCodes < originalByteCount s) $ do
-              case currentTree s of
-                Node _ l r ->
-                  let subtree' = if bit then r else l
-                   in case subtree' of
-                        Leaf (_, b) -> do
-                          put
-                            s
-                              { decoded = BS.cons b <$> decoded s,
-                                currentByteCount = succ parsedCodes,
-                                currentTree = originalTree s
-                              }
-                        node -> put s {currentTree = node}
-                Leaf _ ->
-                  put s {decoded = Nothing, currentByteCount = originalByteCount s}
-        )
-        $ encoded s
-
--- check out Binary package, in particular the BitGet monad
 
 decode :: Tree Word8 -> Word32 -> ByteString -> Maybe ByteString
 decode fullTree totalCodes encoded = runST $ do
