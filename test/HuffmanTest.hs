@@ -20,7 +20,6 @@ import Huffman
     codes,
     countFreq,
     decode,
-    decodeWithState,
     encode,
     leaf,
   )
@@ -344,23 +343,33 @@ decodeTest :: TestTree
 decodeTest =
   testGroup
     "huffman-decode"
-    [ testCase "huffman-decode-st-monad" $ do
+    [ testCase "huffman-decode-ok" $ do
         let str = "aabca"
-        let queue = countFreq str
-        let strTree = buildTree queue
-        case strTree of
-          Nothing -> assertFailure "Expected a valid tree"
-          Just strTree' -> do
-            let strCodes = codes strTree'
-            let encodedStr = encode strCodes str
-            case encodedStr of
-              Left e -> assertFailure $ "Expected a valid encoded str: " <> show e
-              Right (es, letterCount) -> do
-                let decodedStr = decode strTree' letterCount es
-                case decodedStr of
-                  Nothing -> assertFailure "expected a decoded str, got nothing"
-                  Just decodedStr' -> assertEqual "decodedStr == str" str decodedStr'
+        (es, letterCount, strTree) <- decodeArgs str
+        let decodedStr = decode strTree letterCount es
+        case decodedStr of
+          Nothing -> assertFailure "expected a decoded str, got nothing"
+          Just decodedStr' -> assertEqual "decodedStr == str" str decodedStr',
+      testCase "huffman-decode-fail" $ do
+        let str = "aabca"
+        (es, letterCount, _) <- decodeArgs str
+        let decodedStr = decode (Leaf (10, 8)) letterCount es
+        case decodedStr of
+          Nothing -> pure ()
+          Just decodedStr' -> assertFailure $ "expected empty Maybe, got " <> show decodedStr'
     ]
+  where
+    decodeArgs str = do
+      let queue = countFreq str
+      let strTree = buildTree queue
+      case strTree of
+        Nothing -> assertFailure "Expected a valid tree"
+        Just strTree' -> do
+          let strCodes = codes strTree'
+          let encodedStr = encode strCodes str
+          case encodedStr of
+            Left e -> assertFailure $ "Expected a valid encoded str: " <> show e
+            Right (es, letterCount) -> pure (es, letterCount, strTree')
 
 huffmanTests :: TestTree
 huffmanTests =
