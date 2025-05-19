@@ -19,6 +19,7 @@ import Huffman
     buildTree,
     codes,
     countFreq,
+    decode,
     encode,
     leaf,
   )
@@ -338,6 +339,31 @@ encodeTest =
             assertEqual "bytes should be equal" (bsToBinaryString expectedBytes) (bsToBinaryString bs)
     ]
 
+decodeTest :: TestTree
+decodeTest =
+  testGroup
+    "huffman-decode"
+    [ testCase "huffman-decode-st-monad" $ do
+        let str = "aabca"
+        let queue = countFreq str
+        let strTree = buildTree queue
+        case strTree of
+          Nothing -> assertFailure "Expected a valid tree"
+          Just strTree' -> do
+            let strCodes = codes strTree'
+            let encodedStr = encode strCodes str
+            case encodedStr of
+              Left e -> assertFailure $ "Expected a valid encoded str: " <> show e
+              Right (es, letterCount) -> do
+                putStrLn $ bsToBinaryString es
+                print strCodes
+                print strTree'
+                let decodedStr = decode strTree' letterCount es
+                case decodedStr of
+                  Nothing -> assertFailure "expected a decoded str, got nothing"
+                  Just decodedStr' -> assertEqual "decodedStr == str" str decodedStr'
+    ]
+
 huffmanTests :: TestTree
 huffmanTests =
   testGroup
@@ -348,5 +374,6 @@ huffmanTests =
       treeFunctorTest,
       bitBufferTest,
       codesTest,
-      encodeTest
+      encodeTest,
+      decodeTest
     ]
