@@ -17,8 +17,8 @@ import Data.Word (Word32, Word8)
 import Misc (bsTraverseBits)
 
 data Tree a
-  = Node Int (Tree a) (Tree a)
-  | Leaf (Int, a)
+  = Node !Int !(Tree a) !(Tree a)
+  | Leaf !(Int, a)
   deriving (Eq, Show)
 
 leaf :: Int -> Char -> Tree Word8
@@ -73,7 +73,7 @@ encode m bs =
         Just bits -> Right (foldl' bfPush bitbuffer bits, succ c)
 
 decode :: Tree Word8 -> Word32 -> ByteString -> Maybe ByteString
-decode fullTree totalCodes encoded = runST $ do
+decode !fullTree !totalCodes encoded = runST $ do
   subtreeRef <- newSTRef fullTree
   parsedCodesRef <- newSTRef 0
   decodedRef <- newSTRef $ Just BS.empty
@@ -99,8 +99,8 @@ decode fullTree totalCodes encoded = runST $ do
 
 data BitBuffer = BitBuffer
   { bytes :: BS.ByteString,
-    byte :: Word8,
-    byteIndex :: Int
+    byte :: !Word8,
+    byteIndex :: !Int
   }
   deriving (Show, Eq)
 
