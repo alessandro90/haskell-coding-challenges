@@ -1,0 +1,24 @@
+name: Test workflow
+
+on:
+  pull_request:
+  push:
+    branches: [ trunk ]
+    paths-ignore:
+      - '**/*.md'
+      - '**/LICENSE'
+      - '**/.gitignore'
+
+permissions: read-all
+
+jobs:
+  runtests:
+    name: Test Runner
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: haskell-actions/setup@v2
+        with:
+          ghc-version: '9.6.7'
+          cabal-version: '3.12.1.0'
+      - run: cabal test
