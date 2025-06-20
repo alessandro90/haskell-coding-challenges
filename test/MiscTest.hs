@@ -3,7 +3,7 @@
 module MiscTest (miscTests) where
 
 import qualified Data.ByteString as BS
-import Misc (bsToBinaryString, startsWith, startsWithItem, w8FoldBits, w8ToBinaryString)
+import Misc (bsToBinaryString, splitStr, startsWith, startsWithItem, w8FoldBits, w8ToBinaryString)
 import Test.Tasty
 import Test.Tasty.HUnit
 
@@ -67,10 +67,28 @@ w8FoldBitsTest =
     let str = w8FoldBits (\s bit -> s <> (if bit then "1" else "0")) "" w8
     assertEqual "should be equal" "11100011" str
 
+splitStrTest :: TestTree
+splitStrTest =
+  testGroup
+    "misc-split-str"
+    [ testCase "misc-split-str-empty" $ do
+        let s = splitStr ' ' ""
+        assertEqual "expect ampty list" [] s,
+      testCase "misc-split-str-no-sep" $ do
+        let s = splitStr ' ' "1,2,3"
+        assertEqual "expect ampty list" ["1,2,3"] s,
+      testCase "misc-split-str-sep" $ do
+        let s = splitStr ' ' "1 2,3"
+        assertEqual "expect ampty list" ["1", "2,3"] s,
+      testCase "misc-split-str-sep" $ do
+        let s = splitStr ' ' "1   2,3"
+        assertEqual "expect ampty list" ["1", "2,3"] s
+    ]
+
 miscTests :: TestTree
 miscTests =
   testGroup
-    "starts-with"
+    "misc"
     [ startsWithEmptyPrefixTest,
       startsWithEmptyStringTest,
       startsWithNonMatchingTest,
@@ -80,5 +98,6 @@ miscTests =
       startsWithItemNonMatchList,
       w8ToStringTest,
       bsToStringTest,
-      w8FoldBitsTest
+      w8FoldBitsTest,
+      splitStrTest
     ]

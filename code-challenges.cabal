@@ -86,7 +86,8 @@ library
     exposed-modules:  Ccw,
                       Misc,
                       Json,
-                      Huffman
+                      Huffman,
+                      Cut
 
     -- Modules included in this library but not exported.
     -- other-modules: 
@@ -170,7 +171,8 @@ test-suite code-challenges-test
     other-modules: CcwTest,
                    MiscTest,
                    JsonTest,
-                   HuffmanTest
+                   HuffmanTest,
+                   CutTest
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:

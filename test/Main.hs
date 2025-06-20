@@ -4,6 +4,7 @@ module Main (main) where
 -- cabal test --test-options "-p Should-be-2"
 
 import CcwTest (parseArgsTests)
+import CutTest (cutTests)
 import HuffmanTest (huffmanTests)
 import JsonTest (jsonTests)
 import MiscTest (miscTests)
@@ -16,7 +17,8 @@ allTests =
     [ miscTests,
       parseArgsTests,
       jsonTests,
-      huffmanTests
+      huffmanTests,
+      cutTests
     ]
 
 main :: IO ()

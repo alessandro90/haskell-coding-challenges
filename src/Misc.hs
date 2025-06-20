@@ -49,3 +49,17 @@ w8TraverseBits f w = go 0
       | idx == 7 = f $ getBit 7
       | otherwise = f (getBit idx) >> go (succ idx)
     getBit idx = w .&. (1 `shiftL` idx) /= 0
+
+splitStr :: Char -> String -> [String]
+splitStr c s = case dropWhile (== c) s of
+  "" -> []
+  s' -> w : splitStr c s''
+    where
+      (w, s'') = break (== c) s'
+
+splitStrWhen :: (Char -> Bool) -> String -> [String]
+splitStrWhen f s = case dropWhile f s of
+  "" -> []
+  s' -> w : splitStrWhen f s''
+    where
+      (w, s'') = break f s'
