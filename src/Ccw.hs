@@ -125,10 +125,10 @@ formatOutput (textDataList, options) =
        in formatLine total ("total", d)
 
     formatLine (Total totC totL totW totM) (fname, textData) =
-      let c = maybe "" (showNum totC) $ textDataBytes textData
-          l = maybe "" (showNum totL) $ textDataLines textData
-          w = maybe "" (showNum totW) $ textDataWords textData
-          m = maybe "" (showNum totM) $ textDataChars textData
+      let c = maybe "" (showNum totC) textData.textDataBytes
+          l = maybe "" (showNum totL) textData.textDataLines
+          w = maybe "" (showNum totW) textData.textDataWords
+          m = maybe "" (showNum totM) textData.textDataChars
           fname' = if null fname then "" else '\t' : fname
        in c <> l <> w <> m <> fname'
       where
@@ -150,8 +150,8 @@ calcTotal = foldr (\x y -> toTotal x `addTotal` y) $ Total 0 0 0 0
   where
     toTotal d =
       Total
-        (orZero $ textDataBytes d)
-        (orZero $ textDataLines d)
-        (orZero $ textDataWords d)
-        (orZero $ textDataChars d)
+        (orZero d.textDataBytes)
+        (orZero d.textDataLines)
+        (orZero d.textDataWords)
+        (orZero d.textDataChars)
     orZero = fromMaybe 0

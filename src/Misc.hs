@@ -63,3 +63,6 @@ splitStrWhen f s = case dropWhile f s of
   s' -> w : splitStrWhen f s''
     where
       (w, s'') = break f s'
+
+pickIndeces :: [Int] -> [a] -> [a]
+pickIndeces indeces l = [value | (value, index) <- zip l [0 ..], i <- indeces, index == i]

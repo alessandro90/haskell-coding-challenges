@@ -7,3 +7,4 @@ See the [web page](https://codingchallenges.fyi/challenges/intro/) for the list 
 - [x] wc
 - [x] json
 - [x] huffman
+- [x] cut

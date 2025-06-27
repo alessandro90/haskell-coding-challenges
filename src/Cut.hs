@@ -1,15 +1,37 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Cut where
 
 -- This would probably be much easier using a parser lib like Megaparsec
 -- but I tried as an exercise
 
-import Misc (splitStr, splitStrWhen)
+import Data.Text (Text)
+import qualified Data.Text as Text
+import qualified Data.Text.IO as TextIO
+import Misc (pickIndeces, splitStr, splitStrWhen)
+import System.IO (getContents')
 import Text.Read (readMaybe)
+
+cut :: Args -> IO [[[Text]]]
+cut Args {sep, fields, files} = do
+  text <- case files of
+    [] -> (: []) . Text.pack <$> getContents'
+    _ -> mapM TextIO.readFile files
+  pure $ map (cutText sep (map (subtract 1) fields)) text
+
+cutText :: Char -> [Int] -> Text -> [[Text]]
+cutText sep indeces str =
+  let split = map (Text.splitOn (Text.singleton sep)) (Text.lines str)
+   in map (pickIndeces indeces) split
+
+formatCutText :: String -> [[Text]] -> String
+formatCutText name text =
+  name <> ":\n" <> Text.unpack (Text.unlines $ map (Text.intercalate ",") text)
 
 data Args = Args
   { sep :: Char,
-    fields :: [Int],
-    files :: [FilePath]
+    fields :: ![Int],
+    files :: ![FilePath]
   }
   deriving (Show, Eq)
 
@@ -17,7 +39,7 @@ argsDefault :: Args
 argsDefault = Args {sep = '\t', fields = [], files = []}
 
 argsCheckFields :: Args -> Either String Args
-argsCheckFields args = case fields args of
+argsCheckFields args = case args.fields of
   [] -> Left "No fields provided"
   _ -> Right args
 

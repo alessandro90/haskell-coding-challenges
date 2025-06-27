@@ -123,5 +123,5 @@ bfPush bf@BitBuffer {bytes, byte, byteIndex} b
 
 bfAllBytes :: BitBuffer -> BS.ByteString
 bfAllBytes bf
-  | byteIndex bf == 0 = BS.reverse $ bytes bf
-  | otherwise = BS.reverse (bytes bf) `BS.append` BS.singleton (byte bf)
+  | bf.byteIndex == 0 = BS.reverse bf.bytes
+  | otherwise = BS.reverse bf.bytes `BS.append` BS.singleton bf.byte

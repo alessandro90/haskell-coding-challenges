@@ -3,7 +3,7 @@
 module MiscTest (miscTests) where
 
 import qualified Data.ByteString as BS
-import Misc (bsToBinaryString, splitStr, startsWith, startsWithItem, w8FoldBits, w8ToBinaryString)
+import Misc (bsToBinaryString, pickIndeces, splitStr, startsWith, startsWithItem, w8FoldBits, w8ToBinaryString)
 import Test.Tasty
 import Test.Tasty.HUnit
 
@@ -85,6 +85,22 @@ splitStrTest =
         assertEqual "expect ampty list" ["1", "2,3"] s
     ]
 
+pickIndecesTest :: TestTree
+pickIndecesTest =
+  testGroup
+    "misc-pick-indeces"
+    [ testCase "misc-pick-indeces-empty-list" $ do
+        assertEqual "expect empty list" [] (pickIndeces [0, 1, 2] [] :: [Int]),
+      testCase "misc-pick-indeces-empty-indeces-and-list" $ do
+        assertEqual "expect empty list" [] (pickIndeces [] [] :: [Int]),
+      testCase "misc-pick-indeces-empty-indeces" $ do
+        assertEqual "expect empty list" [] (pickIndeces [] [1, 2] :: [Int]),
+      testCase "misc-pick-indeces-matching-indeces" $ do
+        assertEqual "expect empty list" ['a', 'c', 'e'] (pickIndeces [0, 2, 4] ['a', 'b', 'c', 'd', 'e', 'f', 'g']),
+      testCase "misc-pick-indeces-more-than-list" $ do
+        assertEqual "expect empty list" ['a', 'c'] (pickIndeces [0, 2, 4] ['a', 'b', 'c', 'd'])
+    ]
+
 miscTests :: TestTree
 miscTests =
   testGroup
@@ -99,5 +115,6 @@ miscTests =
       w8ToStringTest,
       bsToStringTest,
       w8FoldBitsTest,
-      splitStrTest
+      splitStrTest,
+      pickIndecesTest
     ]

@@ -28,10 +28,10 @@ parseValidArgsSeparate =
     case res of
       Left _ -> assertFailure "Right is expected"
       Right (opts, fnames) -> do
-        assertEqual "Should count bytes" (countBytes opts) $ Just ()
-        assertEqual "Should count lines" (countLines opts) $ Just ()
-        assertEqual "Should count words" (countWords opts) $ Just ()
-        assertEqual "Should count chars" (countChars opts) $ Just ()
+        assertEqual "Should count bytes" opts.countBytes $ Just ()
+        assertEqual "Should count lines" opts.countLines $ Just ()
+        assertEqual "Should count words" opts.countWords $ Just ()
+        assertEqual "Should count chars" opts.countChars $ Just ()
         assertEqual "Should have 2 file names" fnames ["file1", "file2"]
 
 parseValidArgsGrouped :: TestTree
@@ -41,10 +41,10 @@ parseValidArgsGrouped =
     case res of
       Left _ -> assertFailure "Right is expected"
       Right (opts, fnames) -> do
-        assertEqual "Should count bytes" (countBytes opts) $ Just ()
-        assertEqual "Should count lines" (countLines opts) $ Just ()
-        assertEqual "Should count words" (countWords opts) $ Just ()
-        assertEqual "Should count chars" (countChars opts) $ Just ()
+        assertEqual "Should count bytes" opts.countBytes $ Just ()
+        assertEqual "Should count lines" opts.countLines $ Just ()
+        assertEqual "Should count words" opts.countWords $ Just ()
+        assertEqual "Should count chars" opts.countChars $ Just ()
         assertBool "Should have 0 file names" $ null fnames
 
 parseArgsTests :: TestTree
